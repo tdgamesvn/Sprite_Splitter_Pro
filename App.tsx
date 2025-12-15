@@ -4,6 +4,7 @@ import saveAs from 'file-saver';
 import { UploadedImage, FrameData } from './types';
 import { sliceImage, getTrimmedData } from './utils/spriteLogic';
 import { processVideoFile } from './utils/videoProcessor';
+import { processGifFile } from './utils/gifProcessor';
 import { DropZone } from './components/DropZone';
 import { SplitterWorkspace } from './components/SplitterWorkspace';
 import { AnimationPreview } from './components/AnimationPreview';
@@ -17,7 +18,9 @@ const App: React.FC = () => {
   // Export UI State
   const [showSpineOptions, setShowSpineOptions] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [isProcessingVideo, setIsProcessingVideo] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false); // Renamed from isProcessingVideo for generic use
+  const [processingType, setProcessingType] = useState<'video' | 'gif'>('video');
+
   const spineMenuRef = useRef<HTMLDivElement>(null);
 
   // Close spine menu when clicking outside
@@ -33,9 +36,11 @@ const App: React.FC = () => {
 
   const handleFileSelected = useCallback(async (file: File) => {
     const isVideo = file.type.startsWith('video/');
+    const isGif = file.type === 'image/gif';
     
     if (isVideo) {
-        setIsProcessingVideo(true);
+        setIsProcessing(true);
+        setProcessingType('video');
         try {
             const result = await processVideoFile(file);
             setImage({
@@ -46,16 +51,37 @@ const App: React.FC = () => {
                 suggestedRows: result.rows,
                 suggestedColumns: result.columns
             });
-            setFrames([]); // Clear old frames, let SplitterWorkspace regenerate
+            setFrames([]); 
         } catch (error: any) {
             console.error("Video processing failed", error);
             const msg = error instanceof Error ? error.message : "Unknown error";
             alert(`Failed to process video: ${msg}\nPlease ensure the file format (codec) is supported by your browser.`);
         } finally {
-            setIsProcessingVideo(false);
+            setIsProcessing(false);
+        }
+    } else if (isGif) {
+        setIsProcessing(true);
+        setProcessingType('gif');
+        try {
+            const result = await processGifFile(file);
+            setImage({
+                src: result.src,
+                name: file.name.replace(/\.[^/.]+$/, ""),
+                width: result.width,
+                height: result.height,
+                suggestedRows: result.rows,
+                suggestedColumns: result.columns
+            });
+            setFrames([]);
+        } catch (error: any) {
+            console.error("GIF processing failed", error);
+            const msg = error instanceof Error ? error.message : "Unknown error";
+            alert(`Failed to process GIF: ${msg}`);
+        } finally {
+            setIsProcessing(false);
         }
     } else {
-        // Image processing
+        // Static Image processing (PNG/JPG)
         const reader = new FileReader();
         reader.onload = (e) => {
           const src = e.target?.result as string;
@@ -158,12 +184,6 @@ const App: React.FC = () => {
                 width = trimmed.width;
                 height = trimmed.height;
 
-                // Calculate Spine Offsets
-                // Original Center: (frameWidth / 2, frameHeight / 2)
-                // New Image Center relative to Original Top-Left: (trimmed.x + width/2, trimmed.y + height/2)
-                // Spine X = NewCenterX - OriginalCenterX
-                // Spine Y = -(NewCenterY - OriginalCenterY)  <-- Y is inverted in Spine usually
-
                 const originalCenterX = frameWidth / 2;
                 const originalCenterY = frameHeight / 2;
                 const newCenterX = trimmed.x + (width / 2);
@@ -211,8 +231,8 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col font-sans relative">
-      {/* Full screen loader for processing video */}
-      {isProcessingVideo && (
+      {/* Full screen loader for processing */}
+      {isProcessing && (
         <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center">
             <div className="bg-slate-900 p-8 rounded-2xl border border-slate-700 shadow-2xl flex flex-col items-center gap-4">
                 <div className="relative">
@@ -220,7 +240,9 @@ const App: React.FC = () => {
                     <Loader2 className="w-12 h-12 text-orange-500 animate-spin relative z-10" />
                 </div>
                 <div className="text-center space-y-1">
-                    <h3 className="text-xl font-bold text-white">Processing Video</h3>
+                    <h3 className="text-xl font-bold text-white">
+                        Processing {processingType === 'video' ? 'Video' : 'GIF'}
+                    </h3>
                     <p className="text-slate-400">Extracting frames and creating sprite sheet...</p>
                 </div>
             </div>
@@ -277,7 +299,6 @@ const App: React.FC = () => {
                 </div>
 
                 {/* Frames List & Export */}
-                {/* Removed overflow-hidden to allow dropdown to show */}
                 <div className="lg:col-span-2 bg-slate-800 rounded-xl border border-slate-700 shadow-xl flex flex-col relative">
                     <div className="p-4 border-b border-slate-700 flex flex-wrap items-center justify-between gap-4 relative z-10">
                         <div className="flex gap-2 bg-slate-900 p-1 rounded-lg">

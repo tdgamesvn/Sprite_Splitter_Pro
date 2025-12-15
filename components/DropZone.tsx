@@ -17,9 +17,17 @@ export const DropZone: React.FC<DropZoneProps> = ({ onImageSelected }) => {
       e.stopPropagation();
       const files = e.dataTransfer.files;
       if (files && files.length > 0) {
-        // Accept images or videos
-        if (files[0].type.startsWith('image/') || files[0].type.startsWith('video/')) {
-            onImageSelected(files[0]);
+        const file = files[0];
+        
+        // Check if file is image or MP4 video.
+        // Explicitly exclude generic video/ types that might be MOV to prevent errors.
+        const isImage = file.type.startsWith('image/');
+        const isMp4 = file.type === 'video/mp4';
+
+        if (isImage || isMp4) {
+            onImageSelected(file);
+        } else if (file.type.startsWith('video/')) {
+            alert("Format not supported. Please use MP4 files only.");
         }
       }
     },
@@ -49,16 +57,16 @@ export const DropZone: React.FC<DropZoneProps> = ({ onImageSelected }) => {
       </div>
       
       <h3 className="text-xl font-semibold text-slate-200 mb-2">
-        Upload Sprite Sheet or Video
+        Upload Sprite Sheet, GIF, or Video
       </h3>
       <p className="text-slate-400 text-sm mb-6 max-w-xs text-center">
-        Drag and drop PNG, JPG, MOV, or MP4 files here.
+        Drag and drop PNG, JPG, GIF, or MP4 files here.
       </p>
 
       <label className="relative">
         <input
           type="file"
-          accept="image/png, image/jpeg, video/mp4, video/quicktime"
+          accept="image/png, image/jpeg, image/gif, video/mp4"
           onChange={handleFileChange}
           className="hidden"
         />
