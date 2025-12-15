@@ -1,0 +1,5 @@
+{
+  "name": "SpriteSplitter Pro",
+  "description": "A professional tool to slice sprite sheets into individual frames, preview animations, and export as ZIP or PNG.",
+  "requestFramePermissions": []
+}
