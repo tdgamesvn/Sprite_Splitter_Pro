@@ -38,15 +38,21 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
 
   // Sync settings when image prop changes
   useEffect(() => {
-      setSettings(prev => ({
-          ...prev,
+      setSettings({
+          rows: image.suggestedRows || 4,
+          columns: image.suggestedColumns || 4,
           imageWidth: image.width,
           imageHeight: image.height,
-      }));
+      });
       setOriginalAspectRatio(image.width / image.height);
       setAspectRatioLocked(true);
-      // Optional: reset color settings on new image? 
-      // setColorSettings({ enabled: false, stops: [...] });
+      setColorSettings({
+        enabled: false,
+        stops: [
+            { id: '1', offset: 0, color: '#000000' },
+            { id: '2', offset: 100, color: '#ffffff' }
+        ]
+      });
   }, [image]);
 
   const handleDimensionChange = (field: 'imageWidth' | 'imageHeight', value: number) => {
@@ -141,26 +147,41 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
         
         setFrameDimensions({ w: Math.floor(cellW), h: Math.floor(cellH) });
 
-        // Draw Grid
+        // --- GRID DRAWING LOGIC UPDATE ---
+        // Calculate appropriate line width based on image size to ensure visibility when scaled down via CSS.
+        // If image is 4000px wide but shown in a 500px container, a 1px line is 0.125px on screen (invisible).
+        // We scale the line width so it stays roughly 1-1.5 visual pixels.
+        const maxDim = Math.max(settings.imageWidth, settings.imageHeight);
+        // Assuming typical container view width is ~600px
+        const dynamicLineWidth = Math.max(1, Math.round(maxDim / 600));
+
         ctx.beginPath();
-        ctx.strokeStyle = 'rgba(255, 0, 255, 0.8)'; // Magenta for high visibility
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(255, 0, 255, 1)'; // Solid Magenta for max contrast
+        ctx.lineWidth = dynamicLineWidth;
 
         // Vertical lines
         for (let c = 1; c < settings.columns; c++) {
-            ctx.moveTo(c * cellW, 0);
-            ctx.lineTo(c * cellW, settings.imageHeight);
+            // Snap to nearest integer to avoid sub-pixel blurring
+            const x = Math.floor(c * cellW);
+            // Offset by 0.5 only if line width is odd, to center it on the pixel grid
+            const xPos = (dynamicLineWidth % 2 !== 0) ? x + 0.5 : x;
+            
+            ctx.moveTo(xPos, 0);
+            ctx.lineTo(xPos, settings.imageHeight);
         }
 
         // Horizontal lines
         for (let r = 1; r < settings.rows; r++) {
-            ctx.moveTo(0, r * cellH);
-            ctx.lineTo(settings.imageWidth, r * cellH);
+            const y = Math.floor(r * cellH);
+            const yPos = (dynamicLineWidth % 2 !== 0) ? y + 0.5 : y;
+            
+            ctx.moveTo(0, yPos);
+            ctx.lineTo(settings.imageWidth, yPos);
         }
 
         ctx.stroke();
     };
-  }, [image, settings, colorSettings]); // Added colorSettings dependency
+  }, [image, settings, colorSettings]);
 
   // Handle Generating Frames
   const handleSplit = async () => {
@@ -194,7 +215,7 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
             {/* Grid Settings */}
             <div>
                 <h2 className="flex items-center gap-2 text-lg font-semibold text-white mb-4">
-                    <Grid3X3 className="w-5 h-5 text-indigo-400" />
+                    <Grid3X3 className="w-5 h-5 text-orange-400" />
                     Grid Layout
                 </h2>
                 <div className="grid grid-cols-2 gap-4">
@@ -206,7 +227,7 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
                             max="64"
                             value={settings.columns}
                             onChange={(e) => setSettings({ ...settings, columns: Math.max(1, parseInt(e.target.value) || 1) })}
-                            className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                            className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
                         />
                     </div>
                     <div className="space-y-2">
@@ -217,7 +238,7 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
                             max="64"
                             value={settings.rows}
                             onChange={(e) => setSettings({ ...settings, rows: Math.max(1, parseInt(e.target.value) || 1) })}
-                            className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                            className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
                         />
                     </div>
                 </div>
@@ -226,13 +247,13 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
             <div className="border-t border-slate-700/50 pt-6">
                  <div className="flex items-center justify-between mb-4">
                     <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
-                        <Box className="w-5 h-5 text-indigo-400" />
+                        <Box className="w-5 h-5 text-orange-400" />
                         Total Size
                     </h2>
                     <div className="flex items-center gap-1">
                         <button 
                             onClick={() => setAspectRatioLocked(!aspectRatioLocked)}
-                            className={`p-1.5 rounded hover:bg-slate-700 transition-colors ${aspectRatioLocked ? 'text-indigo-400' : 'text-slate-500'}`}
+                            className={`p-1.5 rounded hover:bg-slate-700 transition-colors ${aspectRatioLocked ? 'text-orange-400' : 'text-slate-500'}`}
                             title={aspectRatioLocked ? "Unlock Aspect Ratio" : "Lock Aspect Ratio"}
                         >
                             {aspectRatioLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
@@ -255,7 +276,7 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
                             min="1"
                             value={settings.imageWidth}
                             onChange={(e) => handleDimensionChange('imageWidth', parseInt(e.target.value) || 0)}
-                            className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                            className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
                         />
                     </div>
                     <div className="space-y-2">
@@ -265,7 +286,7 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
                             min="1"
                             value={settings.imageHeight}
                             onChange={(e) => handleDimensionChange('imageHeight', parseInt(e.target.value) || 0)}
-                            className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                            className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
                         />
                     </div>
                 </div>
@@ -275,7 +296,7 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
              <div className="border-t border-slate-700/50 pt-6">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
-                        <Palette className="w-5 h-5 text-indigo-400" />
+                        <Palette className="w-5 h-5 text-orange-400" />
                         Gradient Map
                     </h2>
                     
@@ -286,7 +307,7 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
                             checked={colorSettings.enabled}
                             onChange={(e) => setColorSettings({...colorSettings, enabled: e.target.checked})}
                         />
-                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
                     </label>
                 </div>
 
@@ -314,7 +335,7 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
                                         max="100"
                                         value={stop.offset}
                                         onChange={(e) => handleStopChange(stop.id, 'offset', Number(e.target.value))}
-                                        className="flex-1 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                                        className="flex-1 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-orange-500"
                                     />
                                     <span className="text-xs text-slate-400 w-8 text-right">{stop.offset}%</span>
                                     <button 
@@ -344,8 +365,8 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
                     <span className="text-sm font-mono text-slate-500">{image.width} x {image.height} px</span>
                 </div>
                 <div className="flex justify-between items-center">
-                    <span className="text-sm text-indigo-400 font-medium">Frame Size</span>
-                    <span className="text-sm font-mono text-white bg-indigo-500/10 px-2 py-1 rounded border border-indigo-500/20">
+                    <span className="text-sm text-orange-400 font-medium">Frame Size</span>
+                    <span className="text-sm font-mono text-white bg-orange-500/10 px-2 py-1 rounded border border-orange-500/20">
                         {frameDimensions.w} x {frameDimensions.h} px
                     </span>
                 </div>
@@ -359,22 +380,22 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
         <div className="absolute top-4 left-4 z-10 bg-slate-900/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs text-slate-300 border border-slate-700 flex items-center gap-2">
             <span>Preview</span>
             <span className="w-px h-3 bg-slate-600 mx-1"></span>
-            <span className="text-indigo-400">{settings.imageWidth} x {settings.imageHeight}</span>
-            {colorSettings.enabled && <span className="ml-1 px-1.5 py-0.5 bg-indigo-600 rounded text-[10px] text-white">GM Active</span>}
+            <span className="text-orange-400">{settings.imageWidth} x {settings.imageHeight}</span>
+            {colorSettings.enabled && <span className="ml-1 px-1.5 py-0.5 bg-orange-600 rounded text-[10px] text-white">GM Active</span>}
         </div>
         <div 
             ref={containerRef}
-            className="flex-1 overflow-auto p-8 checkerboard flex items-center justify-center relative"
+            className="flex-1 overflow-hidden p-8 checkerboard flex items-center justify-center relative"
         >
              <canvas 
                 ref={canvasRef} 
-                className="shadow-2xl rendering-pixelated max-w-none"
-                style={{ imageRendering: 'pixelated', filter: colorSettings.enabled ? 'none' : 'none' }} // We use direct canvas manipulation now, removed unused filter
+                className="shadow-2xl rendering-pixelated max-w-full max-h-full object-contain"
+                style={{ imageRendering: 'pixelated', filter: colorSettings.enabled ? 'none' : 'none' }}
             />
         </div>
         {isCalculating && (
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px] flex items-center justify-center z-20">
-                <div className="flex items-center gap-2 text-indigo-400 animate-pulse font-medium">
+                <div className="flex items-center gap-2 text-orange-400 animate-pulse font-medium">
                     <RefreshCw className="w-5 h-5 animate-spin" />
                     Processing...
                 </div>

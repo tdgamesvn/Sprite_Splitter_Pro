@@ -3,10 +3,11 @@ import JSZip from 'jszip';
 import saveAs from 'file-saver';
 import { UploadedImage, FrameData } from './types';
 import { sliceImage, getTrimmedData } from './utils/spriteLogic';
+import { processVideoFile } from './utils/videoProcessor';
 import { DropZone } from './components/DropZone';
 import { SplitterWorkspace } from './components/SplitterWorkspace';
 import { AnimationPreview } from './components/AnimationPreview';
-import { Scissors, Download, Trash2, Layers, Archive, FileImage, FileJson, ChevronDown, Check, Loader2 } from 'lucide-react';
+import { Scissors, Download, Trash2, Layers, Archive, FileImage, FileJson, ChevronDown, Check, Loader2, Video } from 'lucide-react';
 
 const App: React.FC = () => {
   const [image, setImage] = useState<UploadedImage | null>(null);
@@ -16,6 +17,7 @@ const App: React.FC = () => {
   // Export UI State
   const [showSpineOptions, setShowSpineOptions] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isProcessingVideo, setIsProcessingVideo] = useState(false);
   const spineMenuRef = useRef<HTMLDivElement>(null);
 
   // Close spine menu when clicking outside
@@ -29,23 +31,49 @@ const App: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleImageSelected = useCallback((file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const src = e.target?.result as string;
-      const img = new Image();
-      img.onload = () => {
-        setImage({
-          src,
-          name: file.name.replace(/\.[^/.]+$/, ""),
-          width: img.width,
-          height: img.height,
-        });
-        setFrames([]); // Clear old frames
-      };
-      img.src = src;
-    };
-    reader.readAsDataURL(file);
+  const handleFileSelected = useCallback(async (file: File) => {
+    const isVideo = file.type.startsWith('video/');
+    
+    if (isVideo) {
+        setIsProcessingVideo(true);
+        try {
+            const result = await processVideoFile(file);
+            setImage({
+                src: result.src,
+                name: file.name.replace(/\.[^/.]+$/, ""),
+                width: result.width,
+                height: result.height,
+                suggestedRows: result.rows,
+                suggestedColumns: result.columns
+            });
+            setFrames([]); // Clear old frames, let SplitterWorkspace regenerate
+        } catch (error: any) {
+            console.error("Video processing failed", error);
+            const msg = error instanceof Error ? error.message : "Unknown error";
+            alert(`Failed to process video: ${msg}\nPlease ensure the file format (codec) is supported by your browser.`);
+        } finally {
+            setIsProcessingVideo(false);
+        }
+    } else {
+        // Image processing
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const src = e.target?.result as string;
+          const img = new Image();
+          img.onload = () => {
+            setImage({
+              src,
+              name: file.name.replace(/\.[^/.]+$/, ""),
+              width: img.width,
+              height: img.height,
+              // No suggested rows/cols for static images, defaults will be used
+            });
+            setFrames([]); // Clear old frames
+          };
+          img.src = src;
+        };
+        reader.readAsDataURL(file);
+    }
   }, []);
 
   const handleReset = () => {
@@ -182,16 +210,32 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-950 flex flex-col font-sans relative">
+      {/* Full screen loader for processing video */}
+      {isProcessingVideo && (
+        <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center">
+            <div className="bg-slate-900 p-8 rounded-2xl border border-slate-700 shadow-2xl flex flex-col items-center gap-4">
+                <div className="relative">
+                    <div className="absolute inset-0 bg-orange-500 rounded-full blur-xl opacity-20 animate-pulse"></div>
+                    <Loader2 className="w-12 h-12 text-orange-500 animate-spin relative z-10" />
+                </div>
+                <div className="text-center space-y-1">
+                    <h3 className="text-xl font-bold text-white">Processing Video</h3>
+                    <p className="text-slate-400">Extracting frames and creating sprite sheet...</p>
+                </div>
+            </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-indigo-600 p-2 rounded-lg shadow-lg shadow-indigo-500/20">
+            <div className="bg-orange-600 p-2 rounded-lg shadow-lg shadow-orange-500/20">
               <Scissors className="w-5 h-5 text-white" />
             </div>
-            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
-              SpriteSplitter <span className="text-indigo-500 text-sm font-mono tracking-wide px-1">PRO</span>
+            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-orange-200">
+              SpriteSplitter <span className="text-orange-500 text-sm font-mono tracking-wide px-1">PRO</span>
             </h1>
           </div>
           {image && (
@@ -211,7 +255,7 @@ const App: React.FC = () => {
         
         {!image ? (
           <div className="max-w-xl mx-auto mt-20">
-            <DropZone onImageSelected={handleImageSelected} />
+            <DropZone onImageSelected={handleFileSelected} />
           </div>
         ) : (
           <div className="flex flex-col gap-6">
@@ -239,7 +283,7 @@ const App: React.FC = () => {
                         <div className="flex gap-2 bg-slate-900 p-1 rounded-lg">
                             <button 
                                 onClick={() => setActiveTab('preview')}
-                                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === 'preview' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === 'preview' ? 'bg-orange-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
                             >
                                 Frame List
                             </button>
@@ -310,7 +354,7 @@ const App: React.FC = () => {
                         ) : (
                             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">
                                 {frames.map((frame) => (
-                                    <div key={frame.id} className="group relative bg-slate-800 border border-slate-700 rounded-lg p-2 hover:border-indigo-500 transition-all hover:-translate-y-1">
+                                    <div key={frame.id} className="group relative bg-slate-800 border border-slate-700 rounded-lg p-2 hover:border-orange-500 transition-all hover:-translate-y-1">
                                         <div className="aspect-square bg-slate-900 rounded-md mb-2 overflow-hidden checkerboard flex items-center justify-center">
                                             <img src={frame.url} className="max-w-full max-h-full object-contain rendering-pixelated" alt={`Frame ${frame.index}`} />
                                         </div>
@@ -319,7 +363,7 @@ const App: React.FC = () => {
                                             <a 
                                                 href={frame.url} 
                                                 download={`${image.name}_frame_${frame.index}.png`}
-                                                className="text-slate-500 hover:text-indigo-400 transition-colors"
+                                                className="text-slate-500 hover:text-orange-400 transition-colors"
                                                 title="Download PNG"
                                             >
                                                 <Download className="w-3 h-3" />

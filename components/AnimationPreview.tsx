@@ -45,7 +45,7 @@ export const AnimationPreview: React.FC<AnimationPreviewProps> = ({ frames }) =>
     <div className="bg-slate-800 rounded-xl border border-slate-700 p-4 shadow-xl flex flex-col h-full">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">Preview</h3>
-        <div className="text-xs text-indigo-400 font-mono">
+        <div className="text-xs text-orange-400 font-mono">
            Frame: {currentFrameIndex + 1} / {frames.length}
         </div>
       </div>
@@ -66,7 +66,7 @@ export const AnimationPreview: React.FC<AnimationPreviewProps> = ({ frames }) =>
         <div className="flex items-center justify-center gap-4">
             <button 
                 onClick={() => setIsPlaying(!isPlaying)}
-                className="p-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full shadow-lg shadow-indigo-500/20 transition-all active:scale-95"
+                className="p-3 bg-orange-600 hover:bg-orange-500 text-white rounded-full shadow-lg shadow-orange-500/20 transition-all active:scale-95"
             >
                 {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
             </button>
@@ -84,7 +84,7 @@ export const AnimationPreview: React.FC<AnimationPreviewProps> = ({ frames }) =>
                 max="60"
                 value={fps}
                 onChange={(e) => setFps(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-orange-500"
             />
         </div>
       </div>
