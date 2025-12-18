@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { Upload, FileImage, MousePointer2, FileVideo } from 'lucide-react';
+import { Upload, FileImage, MousePointer2, FileVideo, Grid3X3 } from 'lucide-react';
 
 interface DropZoneProps {
   onImageSelected: (file: File) => void;
@@ -20,7 +20,6 @@ export const DropZone: React.FC<DropZoneProps> = ({ onImageSelected }) => {
         const file = files[0];
         
         // Check if file is image or MP4 video.
-        // Explicitly exclude generic video/ types that might be MOV to prevent errors.
         const isImage = file.type.startsWith('image/');
         const isMp4 = file.type === 'video/mp4';
 
@@ -47,40 +46,42 @@ export const DropZone: React.FC<DropZoneProps> = ({ onImageSelected }) => {
     <div
       onDragOver={handleDragOver}
       onDrop={handleDrop}
-      className="w-full h-96 border-2 border-dashed border-slate-700 rounded-2xl flex flex-col items-center justify-center bg-slate-900/50 hover:bg-slate-800/50 hover:border-orange-500 transition-all cursor-pointer group animate-in fade-in zoom-in duration-500"
+      className="card-hover-effect w-full aspect-[4/3] md:aspect-[16/9] lg:h-96 bg-[#111] border border-[#222] rounded-3xl flex flex-col items-center justify-center relative overflow-hidden group cursor-pointer"
     >
-      <div className="relative mb-6">
-        <div className="absolute inset-0 bg-orange-500/20 rounded-full blur-xl group-hover:bg-orange-500/30 transition-all"></div>
-        <div className="relative bg-slate-800 p-6 rounded-full border border-slate-700 group-hover:border-orange-500 group-hover:scale-110 transition-all duration-300">
-          <Upload className="w-10 h-10 text-orange-400" />
+      {/* Background Gradient Spot */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0a0a0a] opacity-80 pointer-events-none"></div>
+      
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center">
+          
+        {/* Icon Box */}
+        <div className="mb-6 p-4 rounded-2xl bg-[#ff6b00]/10 border border-[#ff6b00]/20 group-hover:bg-[#ff6b00] group-hover:border-[#ff6b00] transition-all duration-300">
+            <Grid3X3 className="w-10 h-10 text-[#ff6b00] group-hover:text-white transition-colors" />
         </div>
-      </div>
-      
-      <h3 className="text-xl font-semibold text-slate-200 mb-2">
-        Upload Sprite Sheet, GIF, or Video
-      </h3>
-      <p className="text-slate-400 text-sm mb-6 max-w-xs text-center">
-        Drag and drop PNG, JPG, GIF, or MP4 files here.
-      </p>
+        
+        <h3 className="text-2xl font-bold text-white mb-2">
+          Sprite Splitter
+        </h3>
+        <p className="text-gray-500 text-sm mb-8 max-w-xs text-center leading-relaxed">
+          Split sprite sheets into individual frames. Supports PNG, JPG, GIF & MP4.
+        </p>
 
-      <label className="relative">
-        <input
-          type="file"
-          accept="image/png, image/jpeg, image/gif, video/mp4"
-          onChange={handleFileChange}
-          className="hidden"
-        />
-        <span className="px-6 py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-lg font-medium transition-colors shadow-lg shadow-orange-500/20 flex items-center gap-2 cursor-pointer">
-          <FileImage className="w-4 h-4" />
-          <span className="mx-1">/</span>
-          <FileVideo className="w-4 h-4" />
-          Select File
-        </span>
-      </label>
-      
-      <div className="mt-8 flex gap-4 text-xs text-slate-500">
-        <span className="flex items-center gap-1"><MousePointer2 className="w-3 h-3"/> Images & Video</span>
-        <span className="flex items-center gap-1">Drag & Drop</span>
+        <label className="relative group/btn">
+            <input
+            type="file"
+            accept="image/png, image/jpeg, image/gif, video/mp4"
+            onChange={handleFileChange}
+            className="hidden"
+            />
+            <span className="px-8 py-3 bg-white text-black font-bold text-sm rounded-lg hover:bg-[#e5e5e5] transition-all flex items-center gap-2">
+                 <Upload className="w-4 h-4" />
+                 Select File
+            </span>
+        </label>
+      </div>
+
+      <div className="absolute bottom-6 flex gap-4 text-[10px] font-bold uppercase tracking-wider text-gray-700">
+        <span className="flex items-center gap-1">Or Drag & Drop</span>
       </div>
     </div>
   );

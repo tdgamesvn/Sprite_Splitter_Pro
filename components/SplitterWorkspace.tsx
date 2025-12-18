@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { GridSettings, UploadedImage, FrameData, ColorSettings, GradientStop } from '../types';
 import { sliceImage, applyGradientMap } from '../utils/spriteLogic';
-import { Grid3X3, ArrowRight, Download, Box, RefreshCw, Lock, Unlock, RotateCcw, Palette, Plus, Trash2 } from 'lucide-react';
+import { Grid3X3, Box, RefreshCw, Lock, Unlock, RotateCcw, Palette, Plus, Trash2 } from 'lucide-react';
 
 interface SplitterWorkspaceProps {
   image: UploadedImage;
@@ -148,11 +148,7 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
         setFrameDimensions({ w: Math.floor(cellW), h: Math.floor(cellH) });
 
         // --- GRID DRAWING LOGIC UPDATE ---
-        // Calculate appropriate line width based on image size to ensure visibility when scaled down via CSS.
-        // If image is 4000px wide but shown in a 500px container, a 1px line is 0.125px on screen (invisible).
-        // We scale the line width so it stays roughly 1-1.5 visual pixels.
         const maxDim = Math.max(settings.imageWidth, settings.imageHeight);
-        // Assuming typical container view width is ~600px
         const dynamicLineWidth = Math.max(1, Math.round(maxDim / 600));
 
         ctx.beginPath();
@@ -161,11 +157,8 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
 
         // Vertical lines
         for (let c = 1; c < settings.columns; c++) {
-            // Snap to nearest integer to avoid sub-pixel blurring
             const x = Math.floor(c * cellW);
-            // Offset by 0.5 only if line width is odd, to center it on the pixel grid
             const xPos = (dynamicLineWidth % 2 !== 0) ? x + 0.5 : x;
-            
             ctx.moveTo(xPos, 0);
             ctx.lineTo(xPos, settings.imageHeight);
         }
@@ -174,7 +167,6 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
         for (let r = 1; r < settings.rows; r++) {
             const y = Math.floor(r * cellH);
             const yPos = (dynamicLineWidth % 2 !== 0) ? y + 0.5 : y;
-            
             ctx.moveTo(0, yPos);
             ctx.lineTo(settings.imageWidth, yPos);
         }
@@ -187,7 +179,6 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
   const handleSplit = async () => {
     setIsCalculating(true);
     try {
-        // Pass color settings to the slicer
         const frames = await sliceImage(image.src, settings, colorSettings);
         onFramesGenerated(frames);
     } catch (e) {
@@ -197,106 +188,104 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
     }
   };
 
-  // Trigger split automatically when settings change with a small debounce
   useEffect(() => {
       const timer = setTimeout(() => {
           handleSplit();
       }, 500);
       return () => clearTimeout(timer);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings, image, colorSettings]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
       {/* Configuration Panel */}
       <div className="lg:col-span-1 space-y-4">
-        <div className="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-lg space-y-6 max-h-[calc(100vh-140px)] overflow-y-auto">
+        <div className="bg-[#111] p-5 rounded-2xl border border-[#222] shadow-lg space-y-6 max-h-[calc(100vh-140px)] overflow-y-auto">
             
             {/* Grid Settings */}
             <div>
-                <h2 className="flex items-center gap-2 text-lg font-semibold text-white mb-4">
-                    <Grid3X3 className="w-5 h-5 text-orange-400" />
+                <h2 className="flex items-center gap-2 text-sm font-bold text-gray-300 uppercase tracking-wide mb-4">
+                    <Grid3X3 className="w-4 h-4 text-[#ff6b00]" />
                     Grid Layout
                 </h2>
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <label className="text-xs font-medium text-slate-400 uppercase">Columns (X)</label>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase">Columns (X)</label>
                         <input
                             type="number"
                             min="1"
                             max="64"
                             value={settings.columns}
                             onChange={(e) => setSettings({ ...settings, columns: Math.max(1, parseInt(e.target.value) || 1) })}
-                            className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                            className="w-full bg-[#050505] border border-[#222] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#ff6b00] focus:border-[#ff6b00] outline-none transition-all font-mono text-sm"
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-xs font-medium text-slate-400 uppercase">Rows (Y)</label>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase">Rows (Y)</label>
                         <input
                             type="number"
                             min="1"
                             max="64"
                             value={settings.rows}
                             onChange={(e) => setSettings({ ...settings, rows: Math.max(1, parseInt(e.target.value) || 1) })}
-                            className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                            className="w-full bg-[#050505] border border-[#222] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#ff6b00] focus:border-[#ff6b00] outline-none transition-all font-mono text-sm"
                         />
                     </div>
                 </div>
             </div>
 
-            <div className="border-t border-slate-700/50 pt-6">
+            <div className="border-t border-[#222] pt-6">
                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
-                        <Box className="w-5 h-5 text-orange-400" />
+                    <h2 className="flex items-center gap-2 text-sm font-bold text-gray-300 uppercase tracking-wide">
+                        <Box className="w-4 h-4 text-[#ff6b00]" />
                         Total Size
                     </h2>
                     <div className="flex items-center gap-1">
                         <button 
                             onClick={() => setAspectRatioLocked(!aspectRatioLocked)}
-                            className={`p-1.5 rounded hover:bg-slate-700 transition-colors ${aspectRatioLocked ? 'text-orange-400' : 'text-slate-500'}`}
+                            className={`p-1.5 rounded hover:bg-[#222] transition-colors ${aspectRatioLocked ? 'text-[#ff6b00]' : 'text-gray-600'}`}
                             title={aspectRatioLocked ? "Unlock Aspect Ratio" : "Lock Aspect Ratio"}
                         >
-                            {aspectRatioLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                            {aspectRatioLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
                         </button>
                         <button 
                             onClick={handleResetDimensions}
-                            className="p-1.5 rounded hover:bg-slate-700 text-slate-500 hover:text-white transition-colors"
+                            className="p-1.5 rounded hover:bg-[#222] text-gray-600 hover:text-white transition-colors"
                             title="Reset to Original Size"
                         >
-                            <RotateCcw className="w-4 h-4" />
+                            <RotateCcw className="w-3.5 h-3.5" />
                         </button>
                     </div>
                  </div>
 
                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <label className="text-xs font-medium text-slate-400 uppercase">Width (px)</label>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase">Width (px)</label>
                         <input
                             type="number"
                             min="1"
                             value={settings.imageWidth}
                             onChange={(e) => handleDimensionChange('imageWidth', parseInt(e.target.value) || 0)}
-                            className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                            className="w-full bg-[#050505] border border-[#222] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#ff6b00] focus:border-[#ff6b00] outline-none transition-all font-mono text-sm"
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-xs font-medium text-slate-400 uppercase">Height (px)</label>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase">Height (px)</label>
                         <input
                             type="number"
                             min="1"
                             value={settings.imageHeight}
                             onChange={(e) => handleDimensionChange('imageHeight', parseInt(e.target.value) || 0)}
-                            className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                            className="w-full bg-[#050505] border border-[#222] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#ff6b00] focus:border-[#ff6b00] outline-none transition-all font-mono text-sm"
                         />
                     </div>
                 </div>
             </div>
 
              {/* Gradient Map Section */}
-             <div className="border-t border-slate-700/50 pt-6">
+             <div className="border-t border-[#222] pt-6">
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
-                        <Palette className="w-5 h-5 text-orange-400" />
+                    <h2 className="flex items-center gap-2 text-sm font-bold text-gray-300 uppercase tracking-wide">
+                        <Palette className="w-4 h-4 text-[#ff6b00]" />
                         Gradient Map
                     </h2>
                     
@@ -307,7 +296,7 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
                             checked={colorSettings.enabled}
                             onChange={(e) => setColorSettings({...colorSettings, enabled: e.target.checked})}
                         />
-                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                        <div className="w-9 h-5 bg-[#222] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#ff6b00]"></div>
                     </label>
                 </div>
 
@@ -315,7 +304,7 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
                     <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
                         {/* Gradient Preview Bar */}
                         <div 
-                            className="h-6 w-full rounded-md border border-slate-600 shadow-inner"
+                            className="h-6 w-full rounded-md border border-[#222]"
                             style={{ background: getCssGradient() }}
                         />
 
@@ -335,15 +324,15 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
                                         max="100"
                                         value={stop.offset}
                                         onChange={(e) => handleStopChange(stop.id, 'offset', Number(e.target.value))}
-                                        className="flex-1 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                                        className="flex-1 h-1.5 bg-[#222] rounded-lg appearance-none cursor-pointer accent-[#ff6b00]"
                                     />
-                                    <span className="text-xs text-slate-400 w-8 text-right">{stop.offset}%</span>
+                                    <span className="text-xs text-gray-500 w-8 text-right font-mono">{stop.offset}%</span>
                                     <button 
                                         onClick={() => handleRemoveStop(stop.id)}
                                         disabled={colorSettings.stops.length <= 2}
-                                        className="p-1.5 text-slate-500 hover:text-red-400 disabled:opacity-30 disabled:hover:text-slate-500 transition-colors"
+                                        className="p-1.5 text-gray-600 hover:text-red-400 disabled:opacity-30 disabled:hover:text-gray-600 transition-colors"
                                     >
-                                        <Trash2 className="w-4 h-4" />
+                                        <Trash2 className="w-3.5 h-3.5" />
                                     </button>
                                 </div>
                             ))}
@@ -351,22 +340,22 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
 
                         <button 
                             onClick={handleAddStop}
-                            className="w-full flex items-center justify-center gap-2 py-2 border border-slate-600 rounded-lg text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                            className="w-full flex items-center justify-center gap-2 py-2 border border-dashed border-[#333] hover:border-[#ff6b00] rounded-lg text-xs font-bold uppercase text-gray-500 hover:text-[#ff6b00] hover:bg-[#151515] transition-all"
                         >
-                            <Plus className="w-4 h-4" /> Add Color Stop
+                            <Plus className="w-3.5 h-3.5" /> Add Color Stop
                         </button>
                     </div>
                 )}
              </div>
 
-            <div className="p-4 bg-slate-900/50 rounded-lg border border-slate-700/50">
+            <div className="p-4 bg-[#050505] rounded-lg border border-[#222]">
                 <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-slate-400">Original Size</span>
-                    <span className="text-sm font-mono text-slate-500">{image.width} x {image.height} px</span>
+                    <span className="text-xs text-gray-500 uppercase font-bold">Original Size</span>
+                    <span className="text-xs font-mono text-gray-400">{image.width} x {image.height} px</span>
                 </div>
                 <div className="flex justify-between items-center">
-                    <span className="text-sm text-orange-400 font-medium">Frame Size</span>
-                    <span className="text-sm font-mono text-white bg-orange-500/10 px-2 py-1 rounded border border-orange-500/20">
+                    <span className="text-xs text-[#ff6b00] font-bold uppercase">Frame Size</span>
+                    <span className="text-xs font-mono text-[#ff6b00] bg-[#ff6b00]/10 px-2 py-1 rounded border border-[#ff6b00]/20">
                         {frameDimensions.w} x {frameDimensions.h} px
                     </span>
                 </div>
@@ -376,12 +365,12 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
       </div>
 
       {/* Visual Editor */}
-      <div className="lg:col-span-2 flex flex-col h-[500px] lg:h-auto bg-slate-800 rounded-xl border border-slate-700 overflow-hidden shadow-lg relative">
-        <div className="absolute top-4 left-4 z-10 bg-slate-900/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs text-slate-300 border border-slate-700 flex items-center gap-2">
+      <div className="lg:col-span-2 flex flex-col h-[500px] lg:h-auto bg-[#111] rounded-2xl border border-[#222] overflow-hidden shadow-xl relative">
+        <div className="absolute top-4 left-4 z-10 bg-black/80 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] font-bold uppercase text-gray-400 border border-[#333] flex items-center gap-2">
             <span>Preview</span>
-            <span className="w-px h-3 bg-slate-600 mx-1"></span>
-            <span className="text-orange-400">{settings.imageWidth} x {settings.imageHeight}</span>
-            {colorSettings.enabled && <span className="ml-1 px-1.5 py-0.5 bg-orange-600 rounded text-[10px] text-white">GM Active</span>}
+            <span className="w-px h-3 bg-[#333] mx-1"></span>
+            <span className="text-[#ff6b00] font-mono">{settings.imageWidth} x {settings.imageHeight}</span>
+            {colorSettings.enabled && <span className="ml-1 px-1 py-0.5 bg-[#ff6b00] rounded text-black font-extrabold">GM</span>}
         </div>
         <div 
             ref={containerRef}
@@ -394,8 +383,8 @@ export const SplitterWorkspace: React.FC<SplitterWorkspaceProps> = ({
             />
         </div>
         {isCalculating && (
-            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px] flex items-center justify-center z-20">
-                <div className="flex items-center gap-2 text-orange-400 animate-pulse font-medium">
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px] flex items-center justify-center z-20">
+                <div className="flex items-center gap-2 text-[#ff6b00] animate-pulse font-bold uppercase tracking-widest text-sm">
                     <RefreshCw className="w-5 h-5 animate-spin" />
                     Processing...
                 </div>
