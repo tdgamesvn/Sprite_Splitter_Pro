@@ -3,18 +3,43 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TD Game Studio - Sprite Splitter</title>
+    <title>Sprite Splitter - TD Games Studio</title>
+    <!-- Montserrat Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
           extend: {
+            fontFamily: {
+              sans: ['Montserrat', 'sans-serif'],
+            },
             colors: {
               brand: {
-                orange: '#ff6b00',
-                dark: '#050505',
-                card: '#111111',
-                border: '#222222'
+                primary: '#FF9500',
+                'primary-dark': '#FF7A00',
+                'primary-darker': '#E86800',
+                bg: '#0F0F0F',
+                surface: '#1A1A1A',
+                text: '#F2F2F2',
+                muted: '#9D9C9D',
+              }
+            },
+            boxShadow: {
+              'glow-sm': '0 4px 16px rgba(255, 149, 0, 0.3)',
+              'glow-md': '0 8px 24px rgba(255, 149, 0, 0.4)',
+              'glow-lg': '0 12px 32px rgba(255, 149, 0, 0.6)',
+            },
+            animation: {
+              'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
+            },
+            keyframes: {
+              fadeInUp: {
+                '0%': { opacity: '0', transform: 'translateY(30px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
               }
             }
           }
@@ -23,35 +48,24 @@
     </script>
     <style>
       body {
-        background-color: #050505;
-        color: #e5e5e5;
+        background-color: #0F0F0F;
+        color: #F2F2F2;
+        font-family: 'Montserrat', sans-serif;
       }
-      /* Custom scrollbar for dark theme */
+      
       ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
+        width: 8px;
+        height: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: #0a0a0a; 
+        background: #0F0F0F; 
       }
       ::-webkit-scrollbar-thumb {
-        background: #333; 
+        background: #404040; 
         border-radius: 99px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #ff6b00; 
-      }
-      
-      .text-gradient {
-        background: linear-gradient(to right, #ffffff, #999999);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-
-      .text-gradient-orange {
-        background: linear-gradient(to right, #ff8a00, #ff4d00);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        background: #FF9500; 
       }
 
       .checkerboard {
@@ -65,30 +79,82 @@
         background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
       }
 
-      .card-hover-effect {
+      .btn-primary {
+        background: linear-gradient(135deg, #FF9500 0%, #FF7A00 100%);
         transition: all 0.3s ease;
       }
-      .card-hover-effect:hover {
-        border-color: #ff6b00;
-        box-shadow: 0 0 15px rgba(255, 107, 0, 0.15);
-        transform: translateY(-2px);
+      .btn-primary:hover:not(:disabled) {
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 12px 32px rgba(255, 149, 0, 0.6);
+      }
+      .btn-primary:active:not(:disabled) {
+        transform: translateY(0) scale(0.98);
+        background: linear-gradient(135deg, #E86800, #D65F00);
+      }
+
+      .btn-secondary {
+        border: 2px solid #FF9500;
+        color: #FF9500;
+        transition: all 0.3s ease;
+      }
+      .btn-secondary:hover:not(:disabled) {
+        background: #FF9500;
+        color: #FFFFFF;
+        box-shadow: 0 8px 24px rgba(255, 149, 0, 0.4);
+      }
+
+      .btn-ghost {
+        background: rgba(255, 149, 0, 0.1);
+        color: #FF9500;
+        border: 1px solid rgba(255, 149, 0, 0.3);
+        transition: all 0.2s ease;
+      }
+      .btn-ghost:hover:not(:disabled) {
+        background: rgba(255, 149, 0, 0.2);
+      }
+
+      .card-service {
+        background: #1A1A1A;
+        border: 1px solid rgba(255, 149, 0, 0.2);
+        transition: all 0.3s ease;
+      }
+      .card-service:hover {
+        transform: translateY(-8px);
+        border: 1px solid #FF9500;
+        box-shadow: 0 16px 48px rgba(255, 149, 0, 0.3);
+      }
+      
+      input[type="range"] {
+        appearance: none;
+        height: 4px;
+        background: rgba(255, 149, 0, 0.2);
+        border-radius: 2px;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        background: #FF9500;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 0 10px rgba(255, 149, 0, 0.5);
       }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
-    "file-saver": "https://esm.sh/file-saver@^2.0.5",
-    "jszip": "https://esm.sh/jszip@^3.10.1",
-    "gifuct-js": "https://esm.sh/gifuct-js@2.1.2"
-  }
-}
-</script>
-</head>
-  <body class="antialiased selection:bg-[#ff6b00] selection:text-white">
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@^19.2.3",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+        "react/": "https://esm.sh/react@^19.2.3/",
+        "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
+        "file-saver": "https://esm.sh/file-saver@^2.0.5",
+        "jszip": "https://esm.sh/jszip@^3.10.1",
+        "gifuct-js": "https://esm.sh/gifuct-js@2.1.2"
+      }
+    }
+    </script>
+  </head>
+  <body class="antialiased selection:bg-[#FF9500] selection:text-white">
     <div id="root"></div>
   </body>
 </html>

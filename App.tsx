@@ -15,7 +15,6 @@ const App: React.FC = () => {
   const [frames, setFrames] = useState<FrameData[]>([]);
   const [activeTab, setActiveTab] = useState<'preview' | 'frames'>('preview');
   
-  // Export UI State
   const [showSpineOptions, setShowSpineOptions] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -54,7 +53,7 @@ const App: React.FC = () => {
         } catch (error: any) {
             console.error("Video processing failed", error);
             const msg = error instanceof Error ? error.message : "Unknown error";
-            alert(`Failed to process video: ${msg}\nPlease ensure the file format (codec) is supported by your browser.`);
+            alert(`Failed to process video: ${msg}`);
         } finally {
             setIsProcessing(false);
         }
@@ -198,88 +197,79 @@ const App: React.FC = () => {
         saveAs(content, `${image.name}_spine${suffix}.zip`);
     } catch (error) {
         console.error("Export failed", error);
-        alert("An error occurred during export.");
     } finally {
         setIsExporting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] flex flex-col font-sans relative text-slate-200">
-      {/* Full screen loader */}
+    <div className="min-h-screen bg-brand-bg flex flex-col font-sans relative text-brand-text">
+      {/* Processing Overlay */}
       {isProcessing && (
-        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center">
-            <div className="bg-[#111] p-8 rounded-2xl border border-[#222] shadow-2xl flex flex-col items-center gap-4">
-                <div className="relative">
-                    <div className="absolute inset-0 bg-[#ff6b00] rounded-full blur-xl opacity-20 animate-pulse"></div>
-                    <Loader2 className="w-12 h-12 text-[#ff6b00] animate-spin relative z-10" />
-                </div>
-                <div className="text-center space-y-1">
-                    <h3 className="text-xl font-bold text-white">
-                        Processing {processingType === 'video' ? 'Video' : 'GIF'}
+        <div className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-md flex flex-col items-center justify-center">
+            <div className="bg-brand-surface p-12 rounded-[24px] border-2 border-brand-primary shadow-glow-lg flex flex-col items-center gap-6 animate-in scale-in duration-400">
+                <Loader2 className="w-16 h-16 text-brand-primary animate-spin" />
+                <div className="text-center space-y-2">
+                    <h3 className="text-2xl font-extrabold text-white uppercase tracking-wider">
+                        Processing {processingType}
                     </h3>
-                    <p className="text-gray-500">Extracting frames and creating sprite sheet...</p>
+                    <p className="text-brand-muted font-medium">Please wait while we extract frames...</p>
                 </div>
             </div>
         </div>
       )}
 
-      {/* Header */}
-      <header className="border-b border-[#222] bg-[#050505]/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-             {/* Logo */}
-            <div className="flex flex-col items-center justify-center bg-[#ff6b00]/10 p-2 rounded-xl border border-[#ff6b00]/20">
-                 <Grid3X3 className="w-6 h-6 text-[#ff6b00]" />
+      {/* Navigation Bar */}
+      <header className="h-[80px] border-b border-brand-primary/10 bg-brand-bg/95 backdrop-blur-[10px] sticky top-0 z-[100]">
+        <div className="max-w-[1400px] mx-auto px-10 h-full flex items-center justify-between">
+          <div className="flex items-center gap-5">
+            <div className="flex items-center justify-center bg-brand-primary/15 p-3 rounded-xl border border-brand-primary/20">
+                 <Grid3X3 className="w-7 h-7 text-brand-primary" />
             </div>
-            {/* Brand Text */}
-            <div className="flex items-center gap-3">
-                <span className="text-xl font-bold text-white tracking-wide">Sprite Splitter</span>
-            </div>
+            <span className="text-2xl font-extrabold text-white uppercase tracking-[2px]">Sprite Splitter</span>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-6">
              {image && (
                 <button 
                    onClick={handleReset}
-                   className="text-xs text-gray-500 hover:text-red-400 flex items-center gap-2 transition-colors px-4 py-2 rounded-lg hover:bg-red-950/20 border border-transparent hover:border-red-900/50"
+                   className="text-sm font-semibold text-brand-muted hover:text-red-500 flex items-center gap-2 transition-all px-4 py-2 rounded-lg hover:bg-red-500/10 border border-transparent"
                 >
-                   <Trash2 className="w-3 h-3" />
+                   <Trash2 className="w-4 h-4" />
                    Clear Project
                 </button>
              )}
              
              <a 
                 href="https://app.tdgamestudio.com"
-                className="text-xs font-bold text-gray-500 hover:text-[#ff6b00] flex items-center gap-2 transition-colors px-4 py-2 rounded-lg border border-[#333] hover:border-[#ff6b00] bg-[#111] hover:bg-[#1a1a1a]"
+                className="btn-ghost text-sm font-bold uppercase tracking-wider px-6 py-3 flex items-center gap-2 rounded-xl"
              >
-                <ArrowLeft className="w-3 h-3" />
+                <ArrowLeft className="w-4 h-4" />
                 Back to Tools
              </a>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 max-w-7xl mx-auto w-full p-4 lg:p-8 space-y-8">
+      {/* Main Content Area */}
+      <main className="flex-1 max-w-[1400px] mx-auto w-full p-10 space-y-12 animate-fade-in-up">
         
         {!image ? (
-          <div className="flex flex-col items-center justify-center pt-20 pb-20">
-            {/* DropZone / Tool Card */}
-            <div className="w-full max-w-2xl mx-auto">
+          <div className="flex flex-col items-center justify-center pt-24 pb-24">
+            <div className="w-full max-w-[800px] mx-auto">
                <DropZone onImageSelected={handleFileSelected} />
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-             {/* Breadcrumb / Title */}
-             <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-                <span>Tools</span>
-                <span className="text-gray-700">/</span>
-                <span className="text-[#ff6b00]">Sprite Splitter</span>
+          <div className="flex flex-col gap-10">
+             {/* Breadcrumbs */}
+             <div className="flex items-center gap-3 text-sm font-bold uppercase tracking-widest text-brand-muted">
+                <span className="hover:text-brand-primary cursor-pointer transition-colors">Tools</span>
+                <span className="text-brand-primary/30">/</span>
+                <span className="text-brand-primary">Sprite Splitter</span>
              </div>
 
-            {/* Editor Workspace (Grid & Canvas) */}
+            {/* Editor Workspace */}
             <div className="min-h-[500px]">
               <SplitterWorkspace 
                 image={image} 
@@ -287,64 +277,63 @@ const App: React.FC = () => {
               />
             </div>
 
-            {/* Bottom Panel: Preview & Export */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Bottom Actions Panel */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                 
-                {/* Animation Preview */}
+                {/* Animation Preview Panel */}
                 <div className="lg:col-span-1">
                     <AnimationPreview frames={frames} />
                 </div>
 
-                {/* Frames List & Export */}
-                <div className="lg:col-span-2 bg-[#111] rounded-2xl border border-[#222] shadow-xl flex flex-col relative overflow-hidden">
-                    <div className="p-4 border-b border-[#222] flex flex-wrap items-center justify-between gap-4 relative z-10 bg-[#111]">
-                        <div className="flex gap-2 bg-[#050505] p-1 rounded-lg border border-[#222]">
-                            <button 
-                                onClick={() => setActiveTab('preview')}
-                                className={`px-4 py-1.5 rounded-md text-xs font-bold uppercase tracking-wide transition-all ${activeTab === 'preview' ? 'bg-[#ff6b00] text-white shadow-lg shadow-orange-500/20' : 'text-gray-500 hover:text-gray-300'}`}
-                            >
+                {/* Frames List Panel */}
+                <div className="lg:col-span-2 bg-brand-surface rounded-[20px] border border-brand-primary/20 shadow-lg flex flex-col relative overflow-hidden">
+                    <div className="p-6 border-b border-brand-primary/10 flex flex-wrap items-center justify-between gap-6 bg-brand-surface">
+                        <div className="flex gap-3 bg-brand-bg p-1.5 rounded-xl border border-brand-primary/10">
+                            <span className="px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-widest bg-brand-primary text-white shadow-glow-sm">
                                 Frame List
-                            </button>
+                            </span>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                             <span className="text-xs text-gray-500 hidden sm:inline mr-3 font-mono">
-                                {frames.length} FRAMES
-                             </span>
+                        <div className="flex items-center gap-4">
+                             <div className="px-3 py-1 bg-brand-primary/10 border border-brand-primary/20 rounded-full">
+                                <span className="text-[10px] font-extrabold text-brand-primary tracking-[1.5px]">
+                                    {frames.length} FRAMES
+                                </span>
+                             </div>
                              
                              {/* Spine Export Dropdown */}
                              <div className="relative" ref={spineMenuRef}>
                                  <button
                                     onClick={() => setShowSpineOptions(!showSpineOptions)}
                                     disabled={frames.length === 0 || isExporting}
-                                    className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] hover:bg-[#222] border border-[#333] hover:border-[#ff6b00] disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-wide rounded-lg transition-all"
+                                    className="btn-secondary h-[48px] px-6 text-xs font-bold uppercase tracking-widest rounded-xl flex items-center gap-3 disabled:opacity-30 disabled:cursor-not-allowed"
                                  >
-                                    {isExporting ? <Loader2 className="w-3 h-3 animate-spin"/> : <FileJson className="w-3 h-3 text-[#ff6b00]" />}
+                                    {isExporting ? <Loader2 className="w-4 h-4 animate-spin"/> : <FileJson className="w-4 h-4" />}
                                     Spine ZIP
-                                    <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${showSpineOptions ? 'rotate-180' : ''}`} />
+                                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showSpineOptions ? 'rotate-180' : ''}`} />
                                  </button>
                                  
                                  {showSpineOptions && (
-                                     <div className="absolute top-full right-0 mt-2 w-56 bg-[#1a1a1a] border border-[#333] rounded-xl shadow-2xl overflow-hidden z-20">
-                                         <div className="p-2 space-y-1">
-                                             <div className="px-3 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                                     <div className="absolute bottom-full right-0 mb-3 w-[240px] bg-brand-surface border border-brand-primary/30 rounded-2xl shadow-xl overflow-hidden z-[200] animate-in slide-in-from-bottom-2">
+                                         <div className="p-3 space-y-1.5">
+                                             <div className="px-4 py-2 text-[10px] font-bold text-brand-muted uppercase tracking-[2px]">
                                                  Export Mode
                                              </div>
                                              <button 
                                                 onClick={() => handleExportSpine(false)}
-                                                className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-300 hover:bg-[#222] rounded-lg transition-colors text-left"
+                                                className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-brand-text hover:bg-brand-primary/10 rounded-xl transition-all text-left"
                                              >
                                                 <span>Default (Full Size)</span>
                                              </button>
                                              <button 
                                                 onClick={() => handleExportSpine(true)}
-                                                className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-300 hover:bg-[#222] rounded-lg transition-colors text-left group"
+                                                className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-brand-text hover:bg-brand-primary/10 rounded-xl transition-all text-left group"
                                              >
                                                 <div className="flex flex-col">
                                                     <span>Trim Whitespace</span>
-                                                    <span className="text-[10px] text-gray-600">Optimizes file size</span>
+                                                    <span className="text-[10px] text-brand-muted mt-0.5">Optimized Assets</span>
                                                 </div>
-                                                <Scissors className="w-3 h-3 text-[#ff6b00] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                <Scissors className="w-4 h-4 text-brand-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                                              </button>
                                          </div>
                                      </div>
@@ -354,36 +343,35 @@ const App: React.FC = () => {
                              <button
                                 onClick={handleDownloadZip}
                                 disabled={frames.length === 0}
-                                className="flex items-center gap-2 px-4 py-2 bg-[#ff6b00] hover:bg-[#ff8a00] disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-wide rounded-lg transition-colors shadow-lg shadow-orange-500/10"
+                                className="btn-primary h-[48px] px-8 text-xs font-extrabold uppercase tracking-widest rounded-xl text-white flex items-center gap-3 disabled:opacity-30"
                              >
-                                <Archive className="w-3 h-3" />
+                                <Archive className="w-4 h-4" />
                                 PNG ZIP
                              </button>
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto max-h-[400px] p-4 bg-[#0a0a0a] min-h-[200px]">
+                    <div className="flex-1 overflow-y-auto max-h-[500px] p-8 bg-brand-bg/50 min-h-[300px]">
                         {frames.length === 0 ? (
-                            <div className="h-full flex flex-col items-center justify-center text-gray-700 opacity-50">
-                                <Layers className="w-12 h-12 mb-2 stroke-1" />
-                                <p className="text-sm font-medium">Generate frames to see them here</p>
+                            <div className="h-full flex flex-col items-center justify-center text-brand-muted/40">
+                                <Layers className="w-20 h-20 mb-4 stroke-[1px]" />
+                                <p className="text-lg font-semibold uppercase tracking-wider">Generate frames to start</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-6">
                                 {frames.map((frame) => (
-                                    <div key={frame.id} className="group relative bg-[#151515] border border-[#222] rounded-lg p-2 hover:border-[#ff6b00] transition-all duration-300">
-                                        <div className="aspect-square bg-[#050505] rounded-md mb-2 overflow-hidden checkerboard flex items-center justify-center border border-[#1a1a1a]">
-                                            <img src={frame.url} className="max-w-full max-h-full object-contain rendering-pixelated" alt={`Frame ${frame.index}`} />
+                                    <div key={frame.id} className="group relative bg-brand-surface border border-brand-primary/10 rounded-2xl p-3 hover:border-brand-primary hover:shadow-glow-sm transition-all duration-300">
+                                        <div className="aspect-square bg-brand-bg rounded-xl mb-3 overflow-hidden checkerboard flex items-center justify-center border border-brand-primary/5">
+                                            <img src={frame.url} className="max-w-[90%] max-h-[90%] object-contain rendering-pixelated" alt={`Frame ${frame.index}`} />
                                         </div>
-                                        <div className="flex items-center justify-between px-1">
-                                            <span className="text-[10px] text-gray-500 font-mono">#{frame.index + 1}</span>
+                                        <div className="flex items-center justify-between px-2 pb-1">
+                                            <span className="text-[11px] text-brand-muted font-bold tracking-widest">#{frame.index + 1}</span>
                                             <a 
                                                 href={frame.url} 
                                                 download={`${image.name}_frame_${frame.index}.png`}
-                                                className="text-gray-600 hover:text-[#ff6b00] transition-colors"
-                                                title="Download PNG"
+                                                className="text-brand-muted hover:text-brand-primary transition-colors"
                                             >
-                                                <Download className="w-3 h-3" />
+                                                <Download className="w-4 h-4" />
                                             </a>
                                         </div>
                                     </div>
@@ -398,8 +386,8 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <footer className="border-t border-[#111] py-8 mt-12 text-center text-gray-600 text-sm">
-        <p>© 2025 TD Game Studio. All rights reserved.</p>
+      <footer className="border-t border-brand-primary/5 py-12 mt-20 text-center text-brand-muted text-sm font-medium">
+        <p className="tracking-widest uppercase">© 2025 TD Game Studio. CREATED FOR DEVELOPERS.</p>
       </footer>
     </div>
   );
